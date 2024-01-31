@@ -179,12 +179,14 @@ export default function Post() {
                         {key}
                       </p>
                     </div>
-                    <button
-                      className="underline hover:opacity-75"
-                      onClick={deleteComment}
-                    >
-                      DeleteComment
-                    </button>
+                    {key == userData.name ? (
+                      <button
+                        className="underline hover:opacity-75"
+                        onClick={deleteComment}
+                      >
+                        DeleteComment
+                      </button>
+                    ) : null}
                   </footer>
                   <p className="text-gray-500 dark:text-gray-400">
                     {comObj[key]}
