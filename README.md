@@ -4,7 +4,7 @@ This is a blog website built using ReactJS, Tailwind CSS, and Appwrite.
 
 ## Table of Contents
 
-- [Live Demo]("https://blogger-rosy.vercel.app/")
+- [Live Demo](https://blogger-rosy.vercel.app/)
 - [Features](#features)
 - [Packages](#packages)
 - [Installation](#installation)
