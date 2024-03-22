@@ -34,6 +34,22 @@ export class Service{
         }
     }
 
+    async updateLike(slug, likes, likeObj) {
+        try {
+            return await this.databases.updateDocument(
+                conf.appwriteDatabaseId,
+                conf.appwriteCollectionId,
+                slug,
+                {
+                    likes,
+                    likeObj
+                }
+            )
+        } catch (error) {
+            console.log("Appwrite serive :: updateLike :: error", error);
+        }
+    }
+
     async updatePost(slug, {title, content, featuredImage, status}){
         try {
             return await this.databases.updateDocument(

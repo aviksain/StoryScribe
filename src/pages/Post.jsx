@@ -10,6 +10,8 @@ export default function Post() {
   const [comment, setComment] = useState("");
   const [comObj, setComObj] = useState({});
   const [comments, setComments] = useState([]);
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(0);
 
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -17,6 +19,27 @@ export default function Post() {
   const userData = useSelector((state) => state.auth.userData);
 
   const isAuthor = post && userData ? post.userId === userData.$id : false;
+
+  const handelLike = async () => {
+    setLiked(liked => !liked); // Toggle liked state
+  
+    setLikes(likes => liked ? likes - 1 : likes + 1); // Update likes count
+  
+    const updatedLikes = liked ? likes - 1 : likes + 1; // Calculate updated likes count
+  
+    if (post.likeObj !== null && post.likeObj.trim() !== "") {
+      let likeObj = JSON.parse(post.likeObj);
+      likeObj[userData.name] = !liked; // Toggle like status for current user
+      console.log(likes);
+      await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(likeObj));
+    } else {
+      const likeObj = {
+        [userData.name]: !liked
+      }
+      console.log(likes);
+      await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(likeObj));
+    }
+  }
 
   useEffect(() => {
     if (slug) {
@@ -27,12 +50,19 @@ export default function Post() {
             const parsedComments = JSON.parse(post.comments);
             setComObj(parsedComments);
             setComments(Object.keys(parsedComments));
+            setLikes(post.likes);
+            if(post.likeObj!== null && post.likeObj.trim() !== "") {
+              let likeObj = JSON.parse(post.likeObj);
+              if(likeObj[userData.name] !== undefined && likeObj[userData.name] !== false) {
+                setLiked(true);
+              }
+            }
           } else {
             setComObj({});
             setComments([]);
           }
-          console.log(comObj);
-          console.log(post.comments);
+          // console.log(comObj);
+          // console.log(post.comments);
         } else {
           navigate("/");
         }
@@ -104,11 +134,11 @@ export default function Post() {
             <div className="absolute right-6 top-6">
               <Link to={`/edit-post/${post.$id}`}>
                 <Button bgColor="bg-green-500" className="mr-3">
-                  Edit
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                 </Button>
               </Link>
               <Button bgColor="bg-red-500" onClick={deletePost}>
-                Delete
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
               </Button>
             </div>
           )}
@@ -119,18 +149,12 @@ export default function Post() {
             <h1 className="text-2xl font-bold">{post.title}</h1>
             <button
               type="button"
-              className="text-blue-700 border border-blue-700 hover:bg-blue-700 hover:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm p-2.5 text-center inline-flex items-center me-2 dark:border-blue-500 dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500"
+              className="flex px-3"
+              onClick={handelLike}
             >
-              <svg
-                className="w-5 h-5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 18 18"
-              >
-                <path d="M3 7H1a1 1 0 0 0-1 1v8a2 2 0 0 0 4 0V8a1 1 0 0 0-1-1Zm12.954 0H12l1.558-4.5a1.778 1.778 0 0 0-3.331-1.06A24.859 24.859 0 0 1 6 6.8v9.586h.114C8.223 16.969 11.015 18 13.6 18c1.4 0 1.592-.526 1.88-1.317l2.354-7A2 2 0 0 0 15.954 7Z" />
-              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={liked ? "red" : "none"} stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
               <span class="sr-only">Icon description</span>
+              {likes ? likes : 0}
             </button>
           </div>
           <div className="browser-css">{parse(post.content)}</div>
