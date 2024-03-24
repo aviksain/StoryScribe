@@ -3,7 +3,7 @@ import appwriteService from "../appwrite/config";
 import { Link } from "react-router-dom";
 import TextExtractor from "./TextExtractor";
 
-function PostCard({ $id, title, content, featuredImage }) {
+function PostCard({ $id, title, content, featuredImage, likes }) {
   // bit css
   const outer = {
     // background:"linear-gradient(158deg, #ff9696, #ffff9a, #ffd27ed3)",
@@ -24,7 +24,27 @@ function PostCard({ $id, title, content, featuredImage }) {
           />
         </div>
 
-        <h2 className="text-xl font-bold">{title}</h2>
+        <div className="flex justify-between">
+          <h2 className="text-xl font-bold">{title}</h2>
+          <div className="flex">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="red"
+              stroke="red"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-heart"
+            >
+              <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+            </svg>
+            <span class="sr-only">Icon description</span>
+            {likes ? likes : 0}
+          </div>
+        </div>
         <TextExtractor
           class="mb-3 font-normal text-white dark:text-gray-400"
           htmlContent={content}

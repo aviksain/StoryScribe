@@ -28,13 +28,12 @@ export default function Post() {
     const updatedLikes = liked ? likes - 1 : likes + 1; // Calculate updated likes count
   
     if (post.likeObj !== null && post.likeObj.trim() !== "") {
-      let likeObj = JSON.parse(post.likeObj);
-      likeObj[userData.name] = !liked; // Toggle like status for current user
-      console.log(likes);
-      await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(likeObj));
+      let obj = JSON.parse(post.likeObj);
+      obj[userData.$id] = !liked; // Toggle like status for current user
+      await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(obj));
     } else {
-      const likeObj = {
-        [userData.name]: !liked
+      let likeObj = {
+        [userData.$id]: !liked
       }
       console.log(likes);
       await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(likeObj));
@@ -46,17 +45,23 @@ export default function Post() {
       appwriteService.getPost(slug).then((post) => {
         if (post) {
           setPost(post);
+          console.log("True");
+
+          if(post.likes !== undefined && post.likes !== null) {
+            setLikes(post.likes);
+          }
+          if(post.likeObj!== null && post.likeObj.trim() !== "") {
+            let likeObj = JSON.parse(post.likeObj);
+            if(likeObj[userData.$id] !== undefined && likeObj[userData.$id] !== false) {
+              console.log("True");
+              setLiked(true);
+            }
+          }
+
           if (post.comments != null && post.comments.trim() !== "") {
             const parsedComments = JSON.parse(post.comments);
             setComObj(parsedComments);
             setComments(Object.keys(parsedComments));
-            setLikes(post.likes);
-            if(post.likeObj!== null && post.likeObj.trim() !== "") {
-              let likeObj = JSON.parse(post.likeObj);
-              if(likeObj[userData.name] !== undefined && likeObj[userData.name] !== false) {
-                setLiked(true);
-              }
-            }
           } else {
             setComObj({});
             setComments([]);
@@ -154,7 +159,7 @@ export default function Post() {
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={liked ? "red" : "none"} stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
               <span class="sr-only">Icon description</span>
-              {likes ? likes : 0}
+              {likes}
             </button>
           </div>
           <div className="browser-css">{parse(post.content)}</div>
