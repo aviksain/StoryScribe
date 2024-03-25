@@ -20,6 +20,7 @@ export default function Footer() {
                         <div className="flex h-full flex-col justify-between">
                             <div className="mb-4 inline-flex items-center">
                                 <Logo width="100px" />
+                                <div className="logo display-block text-bold text-4xl">StoryScribe</div>
                             </div>
                             <div>
                                 <p className="text-sm">

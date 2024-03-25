@@ -1,0 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&family=Merienda&display=swap');
+
+
+.logo {
+  font-family: 'Dancing Script', cursive;
+  color: #ffe0b2;
+}
+
+*{
+  font-family: 'Merienda', cursive;
+}

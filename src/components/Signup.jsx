@@ -6,6 +6,8 @@ import { Button, Input, Logo } from "./index.js";
 import { useDispatch } from "react-redux";
 import { useForm } from "react-hook-form";
 import Loading from "./Loading.jsx";
+import conf from "../conf/conf.js";
+import authLogo from "../assets/authLogo.png";
 
 function Signup() {
   const navigate = useNavigate();
@@ -31,12 +33,28 @@ function Signup() {
     }
   };
 
+  const handelDemoLogin = async () => {
+    const userData = {
+      email: conf.demoLoginEmail,
+      password: conf.demoLoginPassword,
+    };
+
+    const session = await authService.login(userData);
+    if (session) {
+      const userData = await authService.getCurrentUser();
+      if (userData) dispatch(login({ userData }));
+      navigate("/");
+    }
+  };
+
   return (
     <div className="flex items-center justify-center">
       <div className={`mx-auto w-full max-w-lg bg-slate-700 rounded-xl p-10 `}>
         <div className="mb-2 flex justify-center">
           <span className="inline-block w-full max-w-[100px]">
-            <Logo width="100%" />
+            <div className="text-center	">
+              <img src={authLogo} alt="Logo" className="w-24 " />
+            </div>
           </span>
         </div>
         <h2 className="text-center text-2xl font-bold leading-tight text-white">
@@ -91,8 +109,14 @@ function Signup() {
             </Button>
           </div>
         </form>
+        <button
+          onClick={handelDemoLogin}
+          className="w-full mt-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+        >
+          Demo Login
+        </button>
       </div>
-     </div>
+    </div>
   );
 }
 

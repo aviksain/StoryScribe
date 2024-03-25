@@ -14,7 +14,7 @@ const TextExtractor = ({ htmlContent, wordLimit }) => {
   let textContent = extractWords(parseHTML(htmlContent), wordLimit);
   if(textContent != "") textContent += '...'
   
-  return <div className='text-white'>{textContent}</div>;
+  return <div className='text-white opacity-50'>{textContent}</div>;
 };
 
 export default TextExtractor;

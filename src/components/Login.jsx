@@ -6,6 +6,8 @@ import { useDispatch } from "react-redux";
 import authService from "../appwrite/auth";
 import { useForm } from "react-hook-form";
 import Loading from "./Loading";
+import authLogo from "../assets/authLogo.png";
+import conf from "../conf/conf.js";
 
 function Login() {
   const navigate = useNavigate();
@@ -21,16 +23,34 @@ function Login() {
       const session = await authService.login(data);
       if (session) {
         const userData = await authService.getCurrentUser();
-        if (userData) dispatch(authLogin({userData}));
+        if (userData) dispatch(authLogin({ userData }));
         navigate("/");
       }
     } catch (error) {
       setError(error.message);
-    } finally{
+    } finally {
       setLoading(false);
     }
   };
 
+  const handelDemoLogin = async () => {
+    const obj = {
+      email: conf.demoLoginEmail,
+      password: conf.demoLoginPassword,
+    };
+
+    try {
+      const session = await authService.login(obj);
+      if (session) {
+        const userData = await authService.getCurrentUser();
+        if (userData) dispatch(authLogin({ userData }));
+        navigate("/");
+      }
+    }catch (error) {
+      console.log(error.message);
+    }
+    
+  };
 
   return (
     <div className="flex items-center justify-center w-full mt-8 mb-8">
@@ -39,7 +59,9 @@ function Login() {
       >
         <div className="mb-2 flex justify-center">
           <span className="inline-block w-full max-w-[100px]">
-            <Logo width="100%" />
+          <div className="text-center	">
+              <img src={authLogo} alt="Logo" className="w-24 " />
+            </div>
           </span>
         </div>
         <h2 className="text-center text-2xl font-bold leading-tight text-white">
@@ -81,10 +103,16 @@ function Login() {
               })}
             />
             <Button type="submit" className="w-full hover:opacity-70">
-            {loading ? <Loading /> : "Sign in"}
+              {loading ? <Loading /> : "Sign in"}
             </Button>
           </div>
         </form>
+        <button
+          onClick={handelDemoLogin}
+          className="w-full mt-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+        >
+          Demo Login
+        </button>
       </div>
     </div>
   );

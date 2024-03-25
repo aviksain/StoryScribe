@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, json, useNavigate, useParams } from "react-router-dom";
 import appwriteService from "../appwrite/config";
 import { Button, Container } from "../components";
 import parse from "html-react-parser";
@@ -8,10 +8,11 @@ import { useSelector } from "react-redux";
 export default function Post() {
   const [post, setPost] = useState(null);
   const [comment, setComment] = useState("");
-  const [comObj, setComObj] = useState({});
-  const [comments, setComments] = useState([]);
+  let [comments, setComments] = useState({});
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
+
+  let mainCommentsObj = {};
 
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -20,54 +21,73 @@ export default function Post() {
 
   const isAuthor = post && userData ? post.userId === userData.$id : false;
 
+  const fetchLatestComments = () => {
+    // console.log(comments);
+    if (comments !== undefined && comments !== null) mainCommentsObj = comments;
+
+    const entries = Object.entries(comments);
+
+    const last20Entries = entries.slice(-2);
+
+    setComments(Object.fromEntries(last20Entries));
+
+    // console.log(comments);
+  };
+
   const handelLike = async () => {
-    setLiked(liked => !liked); // Toggle liked state
-  
-    setLikes(likes => liked ? likes - 1 : likes + 1); // Update likes count
-  
+    setLiked((liked) => !liked); // Toggle liked state
+
+    setLikes((likes) => (liked ? likes - 1 : likes + 1)); // Update likes count
+
     const updatedLikes = liked ? likes - 1 : likes + 1; // Calculate updated likes count
-  
+
     if (post.likeObj !== null && post.likeObj.trim() !== "") {
       let obj = JSON.parse(post.likeObj);
       obj[userData.$id] = !liked; // Toggle like status for current user
       await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(obj));
     } else {
       let likeObj = {
-        [userData.$id]: !liked
-      }
+        [userData.$id]: !liked,
+      };
       console.log(likes);
-      await appwriteService.updateLike(slug, updatedLikes, JSON.stringify(likeObj));
+      await appwriteService.updateLike(
+        slug,
+        updatedLikes,
+        JSON.stringify(likeObj)
+      );
     }
-  }
+  };
 
   useEffect(() => {
     if (slug) {
       appwriteService.getPost(slug).then((post) => {
         if (post) {
           setPost(post);
-          console.log("True");
 
-          if(post.likes !== undefined && post.likes !== null) {
+          if (post.likes !== undefined && post.likes !== null) {
             setLikes(post.likes);
           }
-          if(post.likeObj!== null && post.likeObj.trim() !== "") {
+          if (post.likeObj !== null && post.likeObj.trim() !== "") {
             let likeObj = JSON.parse(post.likeObj);
-            if(likeObj[userData.$id] !== undefined && likeObj[userData.$id] !== false) {
-              console.log("True");
+            if (
+              likeObj[userData.$id] !== undefined &&
+              likeObj[userData.$id] !== false
+            ) {
               setLiked(true);
             }
           }
 
-          if (post.comments != null && post.comments.trim() !== "") {
-            const parsedComments = JSON.parse(post.comments);
-            setComObj(parsedComments);
-            setComments(Object.keys(parsedComments));
+          if (post.comments != null && post.comments !== undefined && post.comments !== "") {
+            const obj = JSON.parse(post.comments);
+            console.log(obj);
+            mainCommentsObj = obj;
+            // setComments(mainCommentsObj);
+            comments = obj;
+            console.log(comments);
+            fetchLatestComments();
           } else {
-            setComObj({});
             setComments([]);
           }
-          // console.log(comObj);
-          // console.log(post.comments);
         } else {
           navigate("/");
         }
@@ -80,39 +100,23 @@ export default function Post() {
   const updateComment = async () => {
     try {
       // console.log(jsonComment);
+      let newComment = {
+        username: userData.name,
+        comment: comment,
+      };
 
-      comObj[userData.name] = comment;
+      const size = Object.entries(mainCommentsObj).length;
 
-      let strComments = JSON.stringify(comObj);
+      mainCommentsObj[size + 1] = newComment;
 
+      mainCommentsObj = JSON.stringify(mainCommentsObj);
       // console.log(jsonComment);
       // Updating the document. Adding the phone at the end of the array attribute
-      await appwriteService.updateComment(slug, strComments);
+      await appwriteService.updateComment(slug, mainCommentsObj);
 
-      location.reload();
+      // location.reload();
     } catch (e) {
       console.log("Error in update comment" + e);
-    }
-  };
-
-  const deleteComment = async () => {
-    try {
-      // Check if the key exists before attempting to delete
-      if (comObj.hasOwnProperty(userData.name)) {
-        // Delete the key-value pair
-        delete comObj[userData.name];
-
-        // Convert the updated object back to JSON
-        let updatedJsonComment = JSON.stringify(comObj);
-
-        // Update the document
-        await appwriteService.updateComment(slug, updatedJsonComment);
-
-        // Reload the page
-        location.reload();
-      }
-    } catch (e) {
-      console.log("Error in delete comment: " + e);
     }
   };
 
@@ -139,11 +143,42 @@ export default function Post() {
             <div className="absolute right-6 top-6">
               <Link to={`/edit-post/${post.$id}`}>
                 <Button bgColor="bg-green-500" className="mr-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="lucide lucide-pencil"
+                  >
+                    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                    <path d="m15 5 4 4" />
+                  </svg>
                 </Button>
               </Link>
               <Button bgColor="bg-red-500" onClick={deletePost}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-trash-2"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  <line x1="10" x2="10" y1="11" y2="17" />
+                  <line x1="14" x2="14" y1="11" y2="17" />
+                </svg>
               </Button>
             </div>
           )}
@@ -152,20 +187,31 @@ export default function Post() {
           <h1 className="italic text-normal">Author: {post.postAuthor}</h1>
           <div className="flex justify-between">
             <h1 className="text-2xl font-bold">{post.title}</h1>
-            <button
-              type="button"
-              className="flex px-3"
-              onClick={handelLike}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={liked ? "red" : "none"} stroke="red" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            <button type="button" className="flex px-3" onClick={handelLike}>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill={liked ? "red" : "none"}
+                stroke="red"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-heart"
+              >
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+              </svg>
               <span class="sr-only">Icon description</span>
               {likes}
             </button>
           </div>
           <div className="browser-css">{parse(post.content)}</div>
         </div>
-
-        <div className="">
+          
+        {/*  comments section   */}
+        
+        {/* <div className="">
           <section className="bg-slate-700 rounded-xl py-8 lg:py-16 antialiased">
             <div className="max-w-2xl mx-auto px-4">
               <div className="flex justify-between items-center mb-6">
@@ -196,35 +242,30 @@ export default function Post() {
               >
                 Post Comment
               </button>
-
-              {comments.map((key) => (
-                <article
-                  key={key}
-                  className="p-6 mb-3 mt-5 text-base bg-white rounded-lg dark:bg-gray-900"
-                >
-                  <footer className="flex justify-between items-center mb-2">
-                    <div className="flex items-center">
-                      <p className="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white font-semibold">
-                        {key}
+              <div className="overflow-y-auto h-200">
+                {Object.keys(comments).map((outerkey) =>
+                  Object.keys(comments[outerkey]).map((key) => (
+                    <article
+                      key={key.username}
+                      className="p-6 mb-3 mt-5 text-base bg-white rounded-lg dark:bg-gray-900"
+                    >
+                      <footer className="flex justify-between items-center mb-2">
+                        <div className="flex items-center">
+                          <p className="inline-flex items-center mr-3 text-sm text-gray-900 dark:text-white font-semibold">
+                            {comments[outerkey][key].username}
+                          </p>
+                        </div>
+                      </footer>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        {comments[outerkey][key].comment}
                       </p>
-                    </div>
-                    {key == userData.name ? (
-                      <button
-                        className="underline hover:opacity-75"
-                        onClick={deleteComment}
-                      >
-                        DeleteComment
-                      </button>
-                    ) : null}
-                  </footer>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    {comObj[key]}
-                  </p>
-                </article>
-              ))}
+                    </article>
+                  ))
+                )}
+              </div>
             </div>
           </section>
-        </div>
+        </div> */}
       </Container>
     </div>
   ) : null;
