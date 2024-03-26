@@ -15,6 +15,7 @@ function Signup() {
   const dispatch = useDispatch();
   const { register, handleSubmit } = useForm();
   const [loading, setLoading] = useState(false);
+  const [demoLoding, setDemoloding] = useState(false);
 
   const create = async (data) => {
     setError("");
@@ -39,12 +40,20 @@ function Signup() {
       password: conf.demoLoginPassword,
     };
 
-    const session = await authService.login(userData);
-    if (session) {
-      const userData = await authService.getCurrentUser();
-      if (userData) dispatch(login({ userData }));
-      navigate("/");
+    try {
+      setDemoloding(true);
+      const session = await authService.login(userData);
+      if (session) {
+        const userData = await authService.getCurrentUser();
+        if (userData) dispatch(login({ userData }));
+        navigate("/");
+      } 
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setDemoloding(false);
     }
+    
   };
 
   return (
@@ -104,16 +113,16 @@ function Signup() {
               })}
               className="bg-slate-300 border-none focus:bg-white text-black"
             />
-            <Button type="submit" className="w-full hover:opacity-70">
+            <Button type="submit" className="flex justify-center w-full hover:opacity-70">
               {loading ? <Loading /> : "Create Account"}
             </Button>
           </div>
         </form>
         <button
           onClick={handelDemoLogin}
-          className="w-full mt-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
+          className="flex justify-center w-full mt-2 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700"
         >
-          Demo Login
+          {demoLoding ? <Loading /> : "Demo Login"}
         </button>
       </div>
     </div>
