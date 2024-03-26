@@ -140,7 +140,7 @@ export default function PostForm({ post }) {
         <Button
           type="submit"
           bgColor={post ? "bg-green-500" : undefined}
-          className="w-full"
+          className="flex justify-center w-full"
         >
           {loading ? <Loading /> : post ? "Update" : "Submit"}
         </Button>
