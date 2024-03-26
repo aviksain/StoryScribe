@@ -1,4 +1,4 @@
-# Blogger
+# StoryScribe
 
 This is a blog website built using ReactJS, Tailwind CSS, and Appwrite.
 
